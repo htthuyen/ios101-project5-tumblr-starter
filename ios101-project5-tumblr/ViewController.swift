@@ -4,16 +4,40 @@
 //
 
 import UIKit
-import Nuke
+import NukeExtensions
 
-class ViewController: UIViewController {
-
-
+class ViewController: UIViewController, UITableViewDataSource {
+    
+    var posts: [Post] = []
+    
+    @IBOutlet weak var tableView: UITableView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        tableView.dataSource = self
         fetchPosts()
+    }
+    
+    // 1. How many rows (rows = number of posts)
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return posts.count
+    }
+
+    // 2. Dequeue & configure cell
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! Cell
+        let post = posts[indexPath.row]
+
+        cell.label.text = post.summary
+
+        if let photo = post.photos.first {
+            let url = photo.originalSize.url
+            NukeExtensions.loadImage(with: url, into: cell.photoImageView)
+        }
+        
+
+        return cell
     }
 
 
@@ -41,13 +65,14 @@ class ViewController: UIViewController {
 
                 DispatchQueue.main.async { [weak self] in
 
-                    let posts = blog.response.posts
+                    self?.posts = blog.response.posts
 
+                    self?.tableView.reloadData()
 
-                    print("✅ We got \(posts.count) posts!")
-                    for post in posts {
-                        print("🍏 Summary: \(post.summary)")
-                    }
+//                    print("✅ We got \(posts.count) posts!")
+//                    for post in posts {
+//                        print("🍏 Summary: \(post.summary)")
+//                    }
                 }
 
             } catch {
